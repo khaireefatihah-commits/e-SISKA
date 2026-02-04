@@ -1,0 +1,2224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>e-SISKA | Log Masuk</title>
+  <!-- Tambah Font Poppins -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+  <!-- Tambah Ikon FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      overflow-y: auto; /* Membenarkan skrol pada mobile */
+    }
+    /* Google Map Background */
+    .map-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .map-bg iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      filter: brightness(0.6);
+      pointer-events: none;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Double Slider Styles */
+    .container {
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 20px;
+      box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+      position: relative;
+      overflow: hidden;
+      width: 768px;
+      max-width: 100%;
+      min-height: 550px;
+      animation: fadeIn 0.8s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .form-container {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      transition: all 0.6s ease-in-out;
+    }
+    .sign-in-container {
+      left: 0;
+      width: 50%;
+      z-index: 2;
+      pointer-events: all;
+    }
+    .container.right-panel-active .sign-in-container {
+      transform: translateX(100%);
+      animation: hide 0.6s forwards;
+      pointer-events: none;
+    }
+    .sign-up-container {
+      left: 0;
+      width: 50%;
+      opacity: 0;
+      z-index: 1;
+    }
+    .container.right-panel-active .sign-up-container {
+      transform: translateX(100%);
+      opacity: 1;
+      z-index: 5;
+      animation: show 0.6s;
+      pointer-events: all;
+    }
+    @keyframes show {
+      0%, 49.99% { opacity: 0; z-index: 1; }
+      50%, 100% { opacity: 1; z-index: 5; }
+    }
+    @keyframes hide {
+      0%, 49.99% { opacity: 1; z-index: 2; }
+      50%, 100% { opacity: 0; z-index: 1; }
+    }
+    .overlay-container {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 50%;
+      height: 100%;
+      overflow: hidden;
+      transition: all 0.6s ease-in-out;
+      z-index: 100;
+    }
+    .container.right-panel-active .overlay-container {
+      transform: translateX(-100%);
+    }
+    .overlay {
+      background: linear-gradient(135deg, #e31e24, #8b0000);
+      background-repeat: no-repeat;
+      background-size: cover;
+      background-position: 0 0;
+      color: #FFFFFF !important;
+      position: relative;
+      left: -100%;
+      height: 100%;
+      width: 200%;
+      transform: translateX(0);
+      transition: transform 0.6s ease-in-out;
+    }
+    /* Tambah kesan kilauan (shine) pada overlay untuk nampak lebih premium */
+    .overlay::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+      z-index: 0;
+    }
+    .container.right-panel-active .overlay {
+      transform: translateX(50%);
+    }
+    .overlay-panel {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 0 50px;
+      text-align: center;
+      top: 0;
+      height: 100%;
+      width: 50%;
+      transform: translateX(0);
+      transition: transform 0.6s ease-in-out;
+      z-index: 1;
+      box-sizing: border-box; /* Pastikan padding tidak menambah lebar panel */
+    }
+    .overlay-panel h1 {
+      color: #FFFFFF;
+      margin: 0;
+      font-size: 2rem;
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+    }
+    .overlay-panel p {
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.6;
+      letter-spacing: 0.5px;
+      margin: 10px 0 20px;
+      color: #FFFFFF;
+      max-width: 280px; /* Hadkan lebar teks secara tetap supaya tidak menyentuh pembahagi */
+      text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.2);
+    }
+    .overlay-left {
+      transform: translateX(-20%);
+    }
+    .container.right-panel-active .overlay-left {
+      transform: translateX(0);
+    }
+    .overlay-right {
+      right: 0;
+      transform: translateX(0);
+    }
+    .container.right-panel-active .overlay-right {
+      transform: translateX(20%);
+    }
+
+    .form-container form {
+      background-color: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      padding: 0 40px;
+      height: 100%;
+      text-align: center;
+    }
+
+    /* Input Group with Icons */
+    .input-group {
+      position: relative;
+      width: 100%;
+      margin: 10px 0;
+    }
+    .input-group i {
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #e31e24;
+      transition: all 0.3s;
+    }
+    .form-container input {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      padding: 12px 15px 12px 45px;
+      width: 100%;
+      border-radius: 12px;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      font-family: 'Poppins', sans-serif;
+    }
+    .form-container input:focus {
+      background: #ffffff;
+      box-shadow: 0 8px 20px rgba(227, 30, 36, 0.15);
+      outline: none;
+    }
+    .form-container input:focus + i {
+      transform: translateY(-50%) scale(1.2);
+    }
+
+    .container button {
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #e31e24, #b3171b);
+      color: #FFFFFF;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 12px 45px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      margin-top: 10px;
+      box-shadow: 0 4px 15px rgba(227, 30, 36, 0.3);
+    }
+    .form-container button:hover {
+      box-shadow: 0 8px 25px rgba(227, 30, 36, 0.5);
+      transform: scale(1.02);
+    }
+    .form-container button:active {
+      transform: scale(0.95);
+    }
+    .ghost {
+      background-color: transparent !important;
+      border-color: #FFFFFF !important;
+      color: #FFFFFF !important;
+      text-shadow: none;
+    }
+    .ghost:hover {
+      background-color: #ffffff !important;
+      color: #e31e24 !important;
+    }
+
+    .error {
+      color: red;
+      text-align: center;
+      margin-bottom: 10px;
+      font-size: 0.95rem;
+    }
+    .logo-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 20px; /* Jarak antara dua logo */
+      margin-bottom: 10px;
+    }
+    .logo {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      display: block;
+      border-radius: 50%;
+      background-color: #fff;
+      padding: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      border: 2px solid rgba(30, 60, 114, 0.1);
+    }
+    .welcome-text {
+      text-align: center;
+      color: #666;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: #444;
+    }
+
+    /* Segmented Control (Tabs) for Mobile */
+    .mobile-tabs {
+      display: none;
+      background: rgba(0, 0, 0, 0.05);
+      padding: 5px;
+      border-radius: 15px;
+      margin-bottom: 25px;
+      width: 100%;
+      max-width: 300px;
+    }
+    .mobile-tabs button {
+      flex: 1;
+      background: transparent;
+      border: none;
+      padding: 10px;
+      border-radius: 10px;
+      font-weight: 600;
+      color: #666;
+      cursor: pointer;
+      transition: all 0.3s;
+      margin: 0;
+      box-shadow: none;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .mobile-tabs button.active {
+      background: #ffffff;
+      color: #e31e24;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        height: 100vh;
+        width: 100vw;
+        margin: 0;
+        border-radius: 0;
+        border: none;
+        display: flex;
+        align-items: center;
+      }
+      .overlay-container {
+        display: none;
+      }
+      .sign-in-container, .sign-up-container {
+        width: 100%;
+      }
+      .container.right-panel-active .sign-in-container {
+        transform: translateX(-100%);
+      }
+      .container.right-panel-active .sign-up-container {
+        transform: translateX(0);
+      }
+      .form-container form {
+        padding: 0 20px;
+      }
+      .mobile-tabs {
+        display: flex;
+      }
+      .mobile-toggle {
+        display: none !important;
+      }
+    }
+    /* Dashboard Sidebar Styles */
+    .dashboard-wrapper {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #f4f6f9;
+      display: flex;
+      z-index: 1000;
+      overflow: hidden; /* Elak scroll pada body */
+    }
+    .sidebar {
+      width: 260px;
+      background: rgba(40, 40, 40, 0.95); /* Tukar ke kelabu gelap/hitam untuk kontras merah */
+      backdrop-filter: blur(10px);
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+      transition: transform 0.3s ease;
+      z-index: 1002;
+      height: 100%;
+      box-sizing: border-box;
+      border-right: 1px solid rgba(255,255,255,0.1);
+    }
+    .sidebar-header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 20px;
+    }
+    .sidebar-header h3 {
+      margin: 10px 0 5px;
+      font-size: 1.2rem;
+      color: #fff;
+      font-weight: 600;
+    }
+    .menu-item {
+      background: transparent;
+      color: rgba(255,255,255,0.8);
+      border: none;
+      padding: 12px 15px;
+      margin-bottom: 8px;
+      border-radius: 8px;
+      text-align: left;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.95rem;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .menu-item:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      transform: translateX(5px);
+    }
+    .menu-item.active {
+      background: rgba(255,255,255,0.2);
+      color: #fff;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-left: 3px solid #e31e24;
+    }
+    .menu-item i {
+      width: 20px;
+      text-align: center;
+    }
+    .logout-btn {
+      margin-top: auto;
+      background: rgba(255, 71, 87, 0.1);
+      color: #ff4757;
+      border: 1px solid #ff4757;
+      padding: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      text-align: center;
+      width: 100%;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .logout-btn:hover {
+      background: #ff4757;
+      color: white;
+    }
+    .main-content {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+      position: relative;
+    }
+    .content-header {
+      background: #fff;
+      padding: 20px 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .content-header h2 {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #2c3e50;
+    }
+    .content-card {
+      background: #fff;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.03);
+      min-height: 400px;
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    /* Mobile Top Bar (Hanya nampak di mobile) */
+    .mobile-top-bar {
+      display: none;
+      background: #e31e24;
+      color: white;
+      padding: 0 20px;
+      height: 60px;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    /* Overlay Gelap bila menu buka */
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1001;
+      backdrop-filter: blur(2px);
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-wrapper {
+        flex-direction: column;
+      }
+      .mobile-top-bar {
+        display: flex;
+      }
+      .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        transform: translateX(-100%); /* Sembunyi sidebar */
+        width: 280px;
+      }
+      .sidebar.open {
+        transform: translateX(0); /* Tunjuk sidebar */
+        box-shadow: 5px 0 15px rgba(0,0,0,0.2);
+      }
+      .sidebar-overlay.show {
+        display: block;
+      }
+      .main-content {
+        padding: 15px;
+        margin-top: 0;
+      }
+      .content-header {
+        padding: 15px 20px;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+      }
+      .content-header h2 {
+        font-size: 1.3rem;
+      }
+    }
+    /* Styles untuk Checklist Kehadiran */
+    .checklist-item {
+      display: block;
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      transition: background 0.2s;
+      color: #333;
+    }
+    .checklist-item:hover {
+      background-color: #f8f9fa;
+    }
+    .checklist-item input {
+      margin-right: 15px;
+      transform: scale(1.2);
+    }
+    .submit-btn {
+      margin-top: 20px;
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+    .submit-btn:hover {
+      background: #218838;
+    }
+    /* Style Khas untuk Logo Sidebar */
+    .sidebar-logo {
+      width: 70px;
+      height: 70px;
+      object-fit: contain;
+      background-color: #fff;
+      border-radius: 50%;
+      padding: 5px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      border: 3px solid rgba(255,255,255,0.2);
+    }
+    /* Styles untuk Borang Input */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 1rem;
+      box-sizing: border-box;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    /* Style untuk Footer Copyright */
+    .footer-copyright {
+      position: fixed;
+      bottom: 15px;
+      width: 100%;
+      text-align: center;
+      color: rgba(255, 255, 255, 0.8);
+      font-size: 0.75rem;
+      z-index: 10;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
+      letter-spacing: 0.5px;
+    }
+    .form-group input:focus, .form-group select:focus {
+      border-color: #e31e24;
+      outline: none;
+      box-shadow: 0 4px 12px rgba(227, 30, 36, 0.08);
+    }
+    .form-group input[readonly] {
+      background-color: #f8f9fa;
+      color: #666;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+  <!-- Background Map -->
+  <div class="map-bg">
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3974.846583040149!2d100.9288113758744!3d4.755000041151648!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31cb4d7000000001%3A0x6d8c8e8e8e8e8e8e!2sMRSM%20Sultan%20Azlan%20Shah!5e0!3m2!1sen!2smy!4v1715850000000!5m2!1sen!2smy" allowfullscreen="" loading="lazy"></iframe>
+  </div>
+
+  <div class="container" id="authContainer">
+    <!-- Panel Pelawat (Kiri bila aktif) -->
+    <div class="form-container sign-up-container">
+      <form>
+        <div class="logo-wrapper">
+          <img src="mara.jpg" alt="Logo" class="logo">
+          <img src="mrsm.jpg" alt="Logo" class="logo">
+        </div>
+        <div class="mobile-tabs">
+          <button type="button" onclick="toggleAuthMode('login')">Staf</button>
+          <button type="button" class="active" onclick="toggleAuthMode('guest')">Pelawat</button>
+        </div>
+        <h2><span style="white-space: nowrap;">Laporan dan Statistik</span><br><span style="font-size: 0.75em; white-space: nowrap; font-weight: normal;">Sistem e-SISKA</span></h2>
+        <p class="welcome-text">Terokai laporan semasa pelajar di sini. Klik untuk akses pelawat.</p>
+        <button type="button" id="guestLoginBtnMain" style="width: 100%;">Masuk Sebagai Pelawat</button>
+      </form>
+    </div>
+
+    <!-- Panel Login (Kanan bila aktif) -->
+    <div class="form-container sign-in-container">
+      <form id="loginForm">
+        <div class="logo-wrapper">
+          <img src="mara.jpg" alt="Logo" class="logo">
+          <img src="mrsm.jpg" alt="Logo" class="logo">
+        </div>
+        <div class="mobile-tabs">
+          <button type="button" class="active" onclick="toggleAuthMode('login')">Staf</button>
+          <button type="button" onclick="toggleAuthMode('guest')">Pelawat</button>
+        </div>
+        <h2>Sistem e-SISKA</h2>
+        <p class="welcome-text">Sistem Integrasi Sahsiah & Kebajikan Asrama<br>MRSM Sultan Azlan Shah</p>
+        <div id="error" class="error"></div>
+        <div class="input-group">
+          <i class="fas fa-user"></i>
+          <input type="text" id="username" placeholder="Nama Pengguna" required />
+        </div>
+        <div class="input-group">
+          <i class="fas fa-lock"></i>
+          <input type="password" id="password" placeholder="Kata Laluan" required />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+
+    <!-- Overlay Slider -->
+    <div class="overlay-container">
+      <div class="overlay">
+        <div class="overlay-panel overlay-left">
+          <h1>Selamat Kembali!</h1>
+          <p>Sila log masuk menggunakan akaun rasmi untuk akses penuh ke sistem <span style="white-space: nowrap;">e-SISKA</span>.</p>
+          <button class="ghost" id="hideGuestBtn">Login</button>
+        </div>
+        <div class="overlay-panel overlay-right">
+          <h1><span style="white-space: nowrap;">Laporan dan Statistik</span><br><span style="font-size: 0.65em; white-space: nowrap; font-weight: normal;">Sistem e-SISKA</span></h1>
+          <p>Terokai laporan semasa pelajar di sini. Klik untuk akses pelawat.</p>
+          <button class="ghost" id="showGuestBtn">Pelawat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Footer Copyright -->
+  <div class="footer-copyright">
+    &copy; 2024 Unit Guru Asrama, MRSM Sultan Azlan Shah. Hak Cipta Terpelihara.
+  </div>
+
+  <!-- Dashboard Baru dengan Sidebar -->
+  <div class="dashboard-wrapper" id="dashboardBox" style="display:none;">
+    <!-- Overlay Gelap (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    
+    <!-- Header Mobile -->
+    <div class="mobile-top-bar">
+      <div style="display:flex; align-items:center; gap:15px;">
+        <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.2rem; cursor:pointer;"><i class="fas fa-bars"></i></button>
+        <span style="font-weight:bold; font-size:1.1rem;">e-SISKA</span>
+      </div>
+    </div>
+
+    <div class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-wrapper" style="margin-bottom: 20px; gap: 15px;">
+           <img src="mara.jpg" alt="Logo" class="sidebar-logo">
+           <img src="mrsm.jpg" alt="Logo" class="sidebar-logo">
+        </div>
+        <h3>e-SISKA</h3>
+        <p>Panel Warden/Petugas</p>
+      </div>
+      <button class="menu-item" onclick="loadModule('Kehadiran Solat', this)"><i class="fas fa-praying-hands"></i> Kehadiran Solat</button>
+      <button class="menu-item" onclick="loadModule('Kebersihan Dorm', this)"><i class="fas fa-bed"></i> Kebersihan Dorm</button>
+      <button class="menu-item" onclick="loadModule('Lewat Keluar Asrama', this)"><i class="fas fa-clock"></i> Lewat Keluar</button>
+      <button class="menu-item" onclick="loadModule('Dewan Selera', this)"><i class="fas fa-utensils"></i> Dewan Selera</button>
+      <button class="menu-item" onclick="loadModule('Laporan', this)"><i class="fas fa-file-alt"></i> Laporan</button>
+      <button class="menu-item" onclick="loadModule('Statistik', this)"><i class="fas fa-chart-bar"></i> Statistik</button>
+      <button class="menu-item" onclick="loadModule('Jana Laporan', this)" style="border-top: 1px solid rgba(255,255,255,0.1); margin-top: 10px;"><i class="fas fa-file-pdf"></i> Jana Laporan</button>
+      <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Log Keluar</button>
+    </div>
+    <div class="main-content">
+      <div class="content-header">
+        <h2 id="pageTitle">Papan Pemuka</h2>
+        <span id="welcomeMsg" style="color: #666;">Selamat Datang</span>
+      </div>
+      <div class="content-card" id="moduleContent">
+        <p>Sila pilih menu di sebelah kiri untuk memulakan tugas.</p>
+      </div>
+    </div>
+  </div>
+  <script>
+    var currentUser = ""; // Pembolehubah global untuk simpan nama user
+    var isGuest = false; // Status pelawat
+
+    // Semakan protokol fail (Penting untuk MacBook/Live Server)
+    if (window.location.protocol === 'file:') {
+      alert("Amaran: Anda membuka fail secara terus (file://). Sila gunakan 'Live Server' atau 'python3 -m http.server' supaya logo MARA/MRSM dapat dimuatkan ke dalam PDF.");
+    }
+
+    // Pembolehubah untuk simpan Base64 logo (Kaedah 1)
+    var logoMaraBase64 = "";
+    var logoMrsmBase64 = "";
+
+    // Fungsi untuk menukar fail imej kepada Base64 secara automatik semasa startup
+    function convertImageToBase64(url, callback) {
+      fetch(url)
+        .then(response => response.blob())
+        .then(blob => {
+          const reader = new FileReader();
+          reader.onloadend = () => callback(reader.result);
+          reader.readAsDataURL(blob);
+        })
+        .catch(err => console.error("Gagal memproses logo: " + url, err));
+    }
+
+    // Muat logo sebaik sahaja halaman dibuka supaya sedia untuk paparan & PDF
+    convertImageToBase64('mara.jpg', (base64) => logoMaraBase64 = base64);
+    convertImageToBase64('mrsm.jpg', (base64) => logoMrsmBase64 = base64);
+
+    // GANTIKAN DENGAN URL WEB APP ANDA DARI GOOGLE APPS SCRIPT
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwxZKPrKf_LDFTlkJLi2W60jhm7Xj6suMxsRnT6uo-wkclsdZq7RFIsqtSYogGnCXUwaA/exec";
+
+    // --- DATABASE PELAJAR & REKOD (Global) ---
+    var masterStudentDb = {};
+
+    // Tarik data pelajar dari Google Sheets
+    function loadStudentsFromSheets() {
+      fetch(SCRIPT_URL + "?action=getStudents", {
+        method: 'GET',
+        mode: 'cors'
+      })
+        .then(res => {
+          if (!res.ok) throw new Error('Rangkaian tidak merespon');
+          return res.json();
+        })
+        .then(data => {
+          masterStudentDb = data;
+          const count = Object.keys(data).length;
+          if(count === 0) {
+            console.warn("AMARAN: Tiada data pelajar dijumpai. Semak nama tab 'Students' di Google Sheets.");
+          }
+        })
+        .catch(err => {
+          console.error("Gagal memuatkan data pelajar:", err);
+          alert("Gagal memuatkan data pelajar. Sila pastikan anda menggunakan 'Live Server' di VS Code dan Apps Script telah di-deploy sebagai 'Anyone'.");
+        });
+    }
+
+    // Panggil fungsi ini semasa mula
+    loadStudentsFromSheets();
+
+    // Fungsi untuk simpan rekod ke Google Sheets
+    function saveRecordToSheets(type, recordData) {
+      const payload = {
+        type: type,
+        recordedBy: currentUser,
+        ...recordData
+      };
+
+      return fetch(SCRIPT_URL, {
+        method: "POST",
+        mode: "cors",
+        body: JSON.stringify(payload),
+        headers: {
+          "Content-Type": "text/plain;charset=utf-8"
+        }
+      })
+      .then(res => res.text())
+      .then(text => {
+        alert("Rekod berjaya disimpan ke Google Sheets!");
+      })
+      .catch(err => alert("Gagal menyimpan: " + err.message));
+    }
+
+    // Fungsi untuk mengawal akses menu berdasarkan peranan
+    function updateMenuAccess() {
+      const menuItems = document.querySelectorAll('.sidebar .menu-item');
+      menuItems.forEach(item => {
+        const menuText = item.innerText.trim();
+        if (isGuest) {
+          // Hanya benarkan Laporan dan Statistik untuk Guest
+          if (menuText === 'Laporan' || menuText === 'Statistik') {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        } else {
+          item.style.display = 'flex'; // Tunjukkan semua untuk user biasa
+        }
+      });
+    }
+
+    // Fungsi Toggle Mode untuk Mobile Tabs
+    window.toggleAuthMode = function(mode) {
+      const container = document.getElementById('authContainer');
+      const tabs = document.querySelectorAll('.mobile-tabs button');
+      
+      if (mode === 'guest') {
+        container.classList.add('right-panel-active');
+      } else {
+        container.classList.remove('right-panel-active');
+      }
+      
+      // Update active state for all tab groups
+      tabs.forEach(tab => {
+        const isGuestTab = tab.innerText.includes('Pelawat');
+        tab.classList.toggle('active', (mode === 'guest' && isGuestTab) || (mode === 'login' && !isGuestTab));
+      });
+    };
+
+    // Tukar paparan antara login/register/dashboard
+    function showBox(box) {
+      const authContainer = document.getElementById('authContainer');
+      const dashboardBox = document.getElementById('dashboardBox');
+      
+      if (box === 'dashboard') {
+        authContainer.style.display = 'none';
+        dashboardBox.style.display = 'flex';
+        updateMenuAccess();
+      } else {
+        dashboardBox.style.display = 'none';
+        authContainer.style.display = 'block';
+        authContainer.classList.remove("right-panel-active");
+      }
+    }
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var username = document.getElementById('username').value.trim(); // Membuang space di depan/belakang
+      var password = document.getElementById('password').value.trim(); // Membuang space di depan/belakang
+      
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyemak...';
+
+      try {
+        const response = await fetch(`${SCRIPT_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`);
+        const result = await response.json();
+
+        if(result.success) {
+          document.getElementById('error').textContent = '';
+          currentUser = username;
+          isGuest = false;
+          showBox('dashboard');
+          document.getElementById('welcomeMsg').textContent = 'Hai, ' + username + '! Selamat datang ke e-SISKA.';
+          loadModule('Laporan', document.querySelector('.menu-item[onclick*="Laporan"]'));
+        } else {
+          document.getElementById('error').textContent = 'Nama pengguna atau kata laluan salah.';
+        }
+      } catch (err) {
+        document.getElementById('error').textContent = 'Ralat rangkaian. Sila cuba lagi.';
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Login';
+      }
+    });
+
+    // Fungsi Login Guest (Dikongsi)
+    function loginAsGuest() {
+      currentUser = "Pelawat";
+      isGuest = true;
+      showBox('dashboard');
+      document.getElementById('welcomeMsg').textContent = 'Selamat Datang, Pelawat! (Akses Terhad)';
+      loadModule('Laporan', document.querySelector('.menu-item[onclick*="Laporan"]'));
+    }
+
+    // Event Listeners untuk Slider
+    document.getElementById('showGuestBtn').onclick = function() {
+      document.getElementById('authContainer').classList.add('right-panel-active');
+    };
+    document.getElementById('hideGuestBtn').onclick = function() {
+      document.getElementById('authContainer').classList.remove('right-panel-active');
+    };
+    document.getElementById('guestLoginBtnMain').onclick = loginAsGuest;
+
+    // Logout
+    document.getElementById('logoutBtn').onclick = function() {
+      showBox('login');
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.getElementById('error').textContent = '';
+      currentUser = "";
+      isGuest = false;
+    };
+    
+    // Fungsi Carian Pelajar Global (Guna di semua modul)
+    function findStudent(id) {
+      if (!id) return null;
+      const cleanSearchId = id.toString().trim().toUpperCase();
+
+      // 1. Cari jika ID adalah Key dalam Object
+      if (masterStudentDb[cleanSearchId]) return masterStudentDb[cleanSearchId];
+      
+      // 2. Cari secara manual dalam senarai (jika key tidak sepadan tepat)
+      return Object.values(masterStudentDb).find(s => 
+        (
+          (s['No maktab'] && s['No maktab'].toString().trim().toUpperCase() === cleanSearchId) ||
+          (s['id'] && s['id'].toString().trim().toUpperCase() === cleanSearchId) ||
+          (s['No Maktab'] && s['No Maktab'].toString().trim().toUpperCase() === cleanSearchId)
+        )
+      );
+    }
+
+    // Fungsi Load Module
+    window.loadModule = function(moduleName, btnElement) {
+      // Highlight menu aktif
+      if(btnElement) {
+        var buttons = document.querySelectorAll('.menu-item');
+        buttons.forEach(b => b.classList.remove('active'));
+        btnElement.classList.add('active');
+      }
+      
+      // Tutup sidebar jika di mobile
+      if (window.innerWidth <= 768) {
+        toggleSidebar();
+      }
+
+      document.getElementById('pageTitle').textContent = moduleName;
+      var contentDiv = document.getElementById('moduleContent');
+      
+      if (moduleName === 'Kehadiran Solat') {
+        var html = `
+          <h3>Borang Lewat/Tidak Hadir Solat</h3>
+          <p>Sila isi maklumat pelajar yang lewat atau tidak hadir ke surau.</p>
+          <form id="latePrayerForm">
+            <div class="form-group">
+              <label>Tarikh:</label>
+              <input type="date" id="dateInput" required>
+            </div>
+            <div class="form-group">
+              <label>Hari:</label>
+              <input type="text" id="dayInput" readonly placeholder="Automatik">
+            </div>
+            <div class="form-group">
+              <label>Waktu Solat:</label>
+              <select id="prayerTime" required>
+                <option value="">Pilih Waktu</option>
+                <option value="Subuh">Subuh</option>
+                <option value="Zohor">Zohor</option>
+                <option value="Asar">Asar</option>
+                <option value="Maghrib">Maghrib</option>
+                <option value="Isyak">Isyak</option>
+              </select>
+            </div>
+            
+            <!-- Bahagian Snap Gambar -->
+            <div class="form-group">
+              <label><i class="fas fa-camera"></i> Ambil Gambar Bukti (Opsional):</label>
+              <input type="file" id="evidencePhoto" accept="image/*" capture="environment" style="padding: 5px;">
+              <div id="photoPreview" style="margin-top:10px; display:none;">
+                <img id="previewImg" src="" style="max-width: 100%; border-radius: 8px; border: 1px solid #ddd;">
+              </div>
+            </div>
+
+            <!-- Bahagian Tambah Pelajar -->
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 20px;">
+              <h4 style="margin-top:0; color:#e31e24; margin-bottom:15px;">Tambah Pelajar ke Senarai</h4>
+              <div class="form-group">
+                <label>No. Maktab Pelajar:</label>
+                <input type="text" id="studentIdInput" placeholder="Masukkan No Maktab (Cth: 1101)">
+                <small style="color:#666;">Cuba masukkan: 1101, 1102, 1103</small>
+              </div>
+              <div class="form-group">
+                <label>Nama Pelajar:</label>
+                <input type="text" id="studentNameInput" readonly placeholder="Nama akan muncul di sini">
+              </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>Tingkatan:</label>
+                <input type="text" id="studentFormInput" readonly placeholder="-">
+              </div>
+              <div class="form-group">
+                <label>Homeroom:</label>
+                <input type="text" id="studentHomeroomInput" readonly placeholder="-">
+              </div>
+            </div>
+              <button type="button" id="addStudentBtn" class="submit-btn" style="background: #17a2b8; width:auto;">+ Tambah ke Senarai</button>
+            </div>
+
+            <!-- Senarai Pelajar yang ditambah -->
+            <div id="studentListContainer" style="display:none;">
+              <h4 style="color:#333;">Senarai Pelajar Untuk Disimpan:</h4>
+              <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <thead style="background: #e31e24; color: white;">
+                  <tr>
+                    <th style="padding: 12px; text-align: left;">Nama</th>
+                    <th style="padding: 12px; text-align: left;">Tingkatan</th>
+                    <th style="padding: 12px; text-align: left;">Homeroom</th>
+                    <th style="padding: 12px; text-align: center;">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="studentListBody"></tbody>
+              </table>
+              <button type="submit" class="submit-btn">Simpan Semua Rekod</button>
+            </div>
+          </form>
+        `;
+        contentDiv.innerHTML = html;
+        
+        var tempList = []; // Array untuk simpan senarai sementara
+
+        // Logic 1: Auto-Date to Day
+        document.getElementById('dateInput').addEventListener('change', function() {
+          var date = new Date(this.value);
+          var days = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+          if(!isNaN(date.getTime())) {
+             document.getElementById('dayInput').value = days[date.getDay()];
+          }
+        });
+
+        // Logic 2: Auto-Search Name by No Maktab
+        document.getElementById('studentIdInput').addEventListener('input', function() {
+          var id = this.value;
+          var nameField = document.getElementById('studentNameInput');
+          var formField = document.getElementById('studentFormInput');
+          var homeField = document.getElementById('studentHomeroomInput');
+          
+          // Gunakan fungsi carian global untuk konsistensi
+          const s = findStudent(id);
+
+          if(s) {
+            // Cuba padankan pelbagai variasi nama header
+            nameField.value = s.Nama || s.nama || s.Name || "";
+            formField.value = s.Tingkatan || s.tingkatan || s.Form || "";
+            homeField.value = s.Homeroom || s.homeroom || "";
+            nameField.style.borderColor = '#28a745'; // Hijau jika jumpa
+          } else {
+            nameField.value = ''; formField.value = ''; homeField.value = '';
+            nameField.style.borderColor = '#ddd';
+          }
+        });
+
+        // Logic: Preview Gambar
+        document.getElementById('evidencePhoto').addEventListener('change', function(e) {
+          const file = e.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+              document.getElementById('previewImg').src = event.target.result;
+              document.getElementById('photoPreview').style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+          }
+        });
+
+        // Logic 3: Tambah Pelajar ke Senarai (Button Tambah)
+        document.getElementById('addStudentBtn').addEventListener('click', function() {
+          var id = document.getElementById('studentIdInput').value;
+          var name = document.getElementById('studentNameInput').value;
+          var formValue = document.getElementById('studentFormInput').value;
+          var homeroomValue = document.getElementById('studentHomeroomInput').value;
+          const s = findStudent(id);
+          
+          if(!name) {
+            alert('Sila masukkan No Maktab yang sah.');
+            return;
+          }
+          
+          // Elak duplicate
+          if(tempList.some(s => s.id === id)) {
+            alert('Pelajar ini sudah ada dalam senarai.');
+            return;
+          }
+
+          tempList.push({ id: id, name: name, class: s ? (s.Kelas || s.kelas || s.Class || "") : "", form: formValue, homeroom: homeroomValue });
+          renderList();
+          
+          // Reset input pelajar
+          document.getElementById('studentIdInput').value = ''; 
+          document.getElementById('studentNameInput').value = '';
+          document.getElementById('studentFormInput').value = ''; document.getElementById('studentHomeroomInput').value = '';
+          document.getElementById('studentNameInput').style.borderColor = '#ddd';
+          document.getElementById('studentIdInput').focus();
+        });
+
+        // Fungsi Render Table
+        function renderList() {
+          var tbody = document.getElementById('studentListBody');
+          var container = document.getElementById('studentListContainer');
+          
+          if(tempList.length === 0) {
+            container.style.display = 'none';
+            return;
+          }
+          
+          container.style.display = 'block';
+          tbody.innerHTML = '';
+          
+          tempList.forEach(function(student, index) {
+            var row = `<tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 12px;">${student.name}</td>
+              <td style="padding: 12px;">${student.form}</td>
+              <td style="padding: 12px;">${student.homeroom}</td>
+              <td style="padding: 12px; text-align: center;">
+                <button type="button" class="delete-btn" data-index="${index}" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Hapus</button>
+              </td>
+            </tr>`;
+            tbody.innerHTML += row;
+          });
+        }
+
+        // Event Listener untuk butang Hapus dalam table
+        document.getElementById('studentListBody').addEventListener('click', function(e) {
+          if(e.target.classList.contains('delete-btn')) {
+            var index = e.target.getAttribute('data-index');
+            tempList.splice(index, 1);
+            renderList();
+          }
+        });
+
+        // Handle Submit
+        document.getElementById('latePrayerForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          
+          var date = document.getElementById('dateInput').value;
+          var time = document.getElementById('prayerTime').value;
+
+          if(!date || !time) {
+            alert('Sila lengkapkan Tarikh dan Waktu Solat.');
+            return;
+          }
+          
+          if(tempList.length === 0) {
+            alert('Tiada pelajar dalam senarai.');
+            return;
+          }
+
+          // Tunjukkan status loading pada butang
+          const btn = e.target.querySelector('button[type="submit"]');
+          const originalText = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Rekod & Gambar...';
+
+          // Ambil data gambar jika ada
+          let imageBase64 = null;
+          const photoFile = document.getElementById('evidencePhoto').files[0];
+          if (photoFile) {
+            const toBase64 = file => new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = error => reject(error);
+            });
+            try {
+              imageBase64 = await toBase64(photoFile);
+            } catch (err) {
+              console.error("Gagal memproses gambar:", err);
+            }
+          }
+
+          saveRecordToSheets('Solat', {
+            date: date,
+            day: document.getElementById('dayInput').value,
+            prayerTime: time,
+            students: tempList,
+            imageBlob: imageBase64
+          }).then(() => {
+            tempList = [];
+            renderList();
+            document.getElementById('latePrayerForm').reset();
+            document.getElementById('photoPreview').style.display = 'none';
+          }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          });
+        });
+      } else if (moduleName === 'Lewat Keluar Asrama') {
+        var html = `
+          <h3>Borang Lewat Keluar Asrama</h3>
+          <p>Sila isi maklumat pelajar yang lewat keluar dari kawasan asrama.</p>
+          <form id="lateExitForm">
+            <div class="form-group">
+              <label>Tarikh:</label>
+              <input type="date" id="exitDateInput" required>
+            </div>
+            <div class="form-group">
+              <label>Hari:</label>
+              <input type="text" id="exitDayInput" readonly placeholder="Automatik">
+            </div>
+            <!-- Bahagian Snap Gambar -->
+            <div class="form-group">
+              <label><i class="fas fa-camera"></i> Ambil Gambar Bukti (Opsional):</label>
+              <input type="file" id="exitEvidencePhoto" accept="image/*" capture="environment" style="padding: 5px;">
+              <div id="exitPhotoPreview" style="margin-top:10px; display:none;">
+                <img id="exitPreviewImg" src="" style="max-width: 100%; border-radius: 8px; border: 1px solid #ddd;">
+              </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 20px;">
+              <h4 style="margin-top:0; color:#e31e24; margin-bottom:15px;">Tambah Pelajar ke Senarai</h4>
+              <div class="form-group">
+                <label>No. Maktab Pelajar:</label>
+                <input type="text" id="exitStudentIdInput" placeholder="Masukkan No Maktab">
+              </div>
+              <div class="form-group">
+                <label>Nama Pelajar:</label>
+                <input type="text" id="exitStudentNameInput" readonly placeholder="Nama akan muncul di sini">
+              </div>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <div class="form-group">
+                  <label>Tingkatan:</label>
+                  <input type="text" id="exitStudentFormInput" readonly placeholder="-">
+                </div>
+                <div class="form-group">
+                  <label>Homeroom:</label>
+                  <input type="text" id="exitStudentHomeroomInput" readonly placeholder="-">
+                </div>
+              </div>
+              <button type="button" id="exitAddStudentBtn" class="submit-btn" style="background: #17a2b8; width:auto;">+ Tambah ke Senarai</button>
+            </div>
+
+            <div id="exitStudentListContainer" style="display:none;">
+              <h4 style="color:#333;">Senarai Pelajar Untuk Disimpan:</h4>
+              <table style="width:100%; border-collapse: collapse; margin-bottom: 20px; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+                <thead style="background: #e31e24; color: white;">
+                  <tr>
+                    <th style="padding: 12px; text-align: left;">Nama</th>
+                    <th style="padding: 12px; text-align: left;">Tingkatan</th>
+                    <th style="padding: 12px; text-align: left;">Homeroom</th>
+                    <th style="padding: 12px; text-align: center;">Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody id="exitStudentListBody"></tbody>
+              </table>
+              <button type="submit" class="submit-btn">Simpan Rekod Keluar</button>
+            </div>
+          </form>
+        `;
+        contentDiv.innerHTML = html;
+
+        var tempList = [];
+
+        document.getElementById('exitDateInput').addEventListener('change', function() {
+          var date = new Date(this.value);
+          var days = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+          if(!isNaN(date.getTime())) {
+             document.getElementById('exitDayInput').value = days[date.getDay()];
+          }
+        });
+
+        document.getElementById('exitStudentIdInput').addEventListener('input', function() {
+          var id = this.value;
+          var nameField = document.getElementById('exitStudentNameInput');
+          var formField = document.getElementById('exitStudentFormInput');
+          var homeField = document.getElementById('exitStudentHomeroomInput');
+          
+          const s = findStudent(id);
+          if(s) {
+            nameField.value = s.Nama || s.nama || s.Name || "";
+            formField.value = s.Tingkatan || s.tingkatan || s.Form || "";
+            homeField.value = s.Homeroom || s.homeroom || "";
+            nameField.style.borderColor = '#28a745';
+          } else {
+            nameField.value = '';
+            formField.value = '';
+            homeField.value = '';
+            nameField.style.borderColor = '#ddd';
+          }
+        });
+
+        document.getElementById('exitAddStudentBtn').addEventListener('click', function() {
+          var id = document.getElementById('exitStudentIdInput').value;
+          var name = document.getElementById('exitStudentNameInput').value;
+          var form = document.getElementById('exitStudentFormInput').value;
+          var homeroom = document.getElementById('exitStudentHomeroomInput').value;
+          const s = findStudent(id); // Cari data penuh pelajar
+          
+          if(!name) { alert('Sila masukkan No Maktab yang sah.'); return; }
+          if(tempList.some(s => s.id === id)) { alert('Pelajar ini sudah ada dalam senarai.'); return; }
+          
+          tempList.push({ 
+            id: id, 
+            name: name, 
+            class: s ? (s.Kelas || s.kelas || s.Class || "") : "",
+            form: form,
+            homeroom: homeroom
+          });
+          
+          renderExitList();
+          document.getElementById('exitStudentIdInput').value = '';
+          document.getElementById('exitStudentNameInput').value = '';
+          document.getElementById('exitStudentFormInput').value = '';
+          document.getElementById('exitStudentHomeroomInput').value = '';
+          document.getElementById('exitStudentIdInput').focus();
+        });
+
+        function renderExitList() {
+          var tbody = document.getElementById('exitStudentListBody');
+          var container = document.getElementById('exitStudentListContainer');
+          if(tempList.length === 0) { container.style.display = 'none'; return; }
+          container.style.display = 'block';
+          tbody.innerHTML = '';
+          tempList.forEach(function(student, index) {
+            tbody.innerHTML += `<tr style="border-bottom: 1px solid #eee;">
+              <td style="padding: 12px;">${student.name}</td>
+              <td style="padding: 12px;">${student.form}</td>
+              <td style="padding: 12px;">${student.homeroom}</td>
+              <td style="padding: 12px; text-align: center;">
+                <button type="button" class="exit-delete-btn" data-index="${index}" style="background: #ff4757; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.8rem;">Hapus</button>
+              </td>
+            </tr>`;
+          });
+        }
+
+        document.getElementById('exitStudentListBody').addEventListener('click', function(e) {
+          if(e.target.classList.contains('exit-delete-btn')) {
+            var index = e.target.getAttribute('data-index');
+            tempList.splice(index, 1);
+            renderExitList();
+          }
+        });
+
+        document.getElementById('lateExitForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          var date = document.getElementById('exitDateInput').value;
+          if(!date) { alert('Sila lengkapkan Tarikh.'); return; }
+          if(tempList.length === 0) { alert('Tiada pelajar dalam senarai.'); return; }
+
+          // Tunjukkan status loading
+          const btn = e.target.querySelector('button[type="submit"]');
+          const originalText = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan Rekod...';
+
+          // Ambil data gambar jika ada
+          let imageBase64 = null;
+          const photoFile = document.getElementById('exitEvidencePhoto').files[0];
+          if (photoFile) {
+            const toBase64 = file => new Promise((resolve, reject) => {
+              const reader = new FileReader();
+              reader.readAsDataURL(file);
+              reader.onload = () => resolve(reader.result);
+              reader.onerror = error => reject(error);
+            });
+            try {
+              imageBase64 = await toBase64(photoFile);
+            } catch (err) {
+              console.error("Gagal memproses gambar:", err);
+            }
+          }
+
+          saveRecordToSheets('Lewat Keluar', {
+            date: date,
+            day: document.getElementById('exitDayInput').value,
+            reason: "Lewat Keluar Asrama",
+            students: tempList,
+            imageBlob: imageBase64
+          }).then(() => {
+            tempList = [];
+            renderExitList();
+            document.getElementById('lateExitForm').reset();
+            document.getElementById('exitPhotoPreview').style.display = 'none';
+          }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          });
+        });
+      } else if (moduleName === 'Kebersihan Dorm') {
+        const criteria = [
+          "Sampah dalam tong sampah dikosongkan",
+          "Langsir diikat",
+          "Slipar/kasut disusun di atas rak",
+          "Lantai disapu bersih",
+          "Bawah katil dan atas loker ada satu barang sahaja",
+          "Tiada pakaian/tuala tergantung",
+          "Bakul dobi berada di atas rak kasut",
+          "Tiada apa-apa barang diatas meja study carrer",
+          "Katil lengkap dengan sarung bantal, selimut dan cadar maktab",
+          "Tiada barang lain diatas rak kasut selain bakul dobi",
+          "Buku diatas study carrer disusun dengan kemas",
+          "Suiz lampu dan kipas ditutup",
+          "Tidak meninggalkan sebarang plag pada soket"
+        ];
+
+        let criteriaHtml = criteria.map((c, i) => `
+          <div class="form-group" style="border-bottom: 1px solid #eee; padding: 15px 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <label style="margin-bottom: 0; font-weight: 500;">${i+1}. ${c}</label>
+              <span id="scoreVal${i}" style="font-weight: bold; color: #e31e24; background: #fff1f1; padding: 2px 12px; border-radius: 15px; border: 1px solid #ffcccc; min-width: 20px; text-align: center;">0</span>
+            </div>
+            <input type="range" class="dorm-score" min="0" max="10" value="0" step="1" 
+              style="width: 100%; cursor: pointer; accent-color: #e31e24;" 
+              oninput="document.getElementById('scoreVal${i}').textContent = this.value; calculateDormScore()">
+          </div>
+        `).join('');
+
+        var html = `
+          <h3>Borang Penilaian Kebersihan Dorm</h3>
+          <p>Sila masukkan markah (0-10) bagi setiap kriteria berikut.</p>
+          <form id="dormCleanlinessForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div class="form-group">
+                <label>Tarikh:</label>
+                <input type="date" id="dormDateInput" required>
+              </div>
+              <div class="form-group">
+                <label>Hari:</label>
+                <input type="text" id="dormDayInput" readonly placeholder="Automatik">
+              </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;">
+              <div class="form-group">
+                <label>Blok:</label>
+                <select id="dormBlockSelect" required>
+                  <option value="">Pilih Blok</option>
+                  <option value="Jati">Jati</option>
+                  <option value="Meranti">Meranti</option>
+                  <option value="Mawar">Mawar</option>
+                  <option value="Seroja">Seroja</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Aras:</label>
+                <select id="dormLevelSelect" required onchange="updateDormRooms()">
+                  <option value="">Pilih Aras</option>
+                  <option value="Bawah">Aras Bawah</option>
+                  <option value="1">Aras 1</option>
+                  <option value="2">Aras 2</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Bilik:</label>
+                <select id="dormRoomSelect" required>
+                  <option value="">Pilih Bilik</option>
+                </select>
+              </div>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #e9ecef; margin-bottom: 20px;">
+              <h4 style="margin-top:0; color:#e31e24; margin-bottom:15px;">Kriteria Penilaian (Jumlah: 130 Markah)</h4>
+              ${criteriaHtml}
+              
+              <div style="margin-top: 20px; padding: 15px; background: #fff; border-radius: 8px; border: 2px solid #e31e24; text-align: center;">
+                <h4 style="margin:0;">Jumlah Markah: <span id="totalDormMarks">0</span> / 130</h4>
+                <h2 style="margin:10px 0 0 0; color: #e31e24;">Peratus: <span id="dormPercentage">0</span>%</h2>
+              </div>
+            </div>
+
+            <button type="submit" class="submit-btn">Simpan Rekod Kebersihan</button>
+          </form>
+        `;
+        contentDiv.innerHTML = html;
+
+        // Logic: Auto-Day for Dorm
+        document.getElementById('dormDateInput').addEventListener('change', function() {
+          var date = new Date(this.value);
+          var days = ['Ahad', 'Isnin', 'Selasa', 'Rabu', 'Khamis', 'Jumaat', 'Sabtu'];
+          if(!isNaN(date.getTime())) {
+             document.getElementById('dormDayInput').value = days[date.getDay()];
+          }
+        });
+
+        document.getElementById('dormCleanlinessForm').addEventListener('submit', async function(e) {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          const originalText = btn.innerHTML;
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+          saveRecordToSheets('Dorm', {
+            date: document.getElementById('dormDateInput').value,
+            day: document.getElementById('dormDayInput').value,
+            block: document.getElementById('dormBlockSelect').value,
+            level: document.getElementById('dormLevelSelect').value,
+            room: document.getElementById('dormRoomSelect').value,
+            totalMarks: document.getElementById('totalDormMarks').textContent,
+            percentage: document.getElementById('dormPercentage').textContent + "%"
+          }).then(() => {
+            document.getElementById('dormCleanlinessForm').reset();
+            document.getElementById('dormRoomSelect').innerHTML = '<option value="">Pilih Bilik</option>';
+            document.querySelectorAll('[id^="scoreVal"]').forEach(span => span.textContent = '0');
+            window.calculateDormScore();
+          }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          });
+        });
+      } else if (moduleName === 'Dewan Selera') {
+        const dsCriteria = [
+          { id: 'sample', label: 'Penyediaan Sample Makanan' },
+          { id: 'menu', label: 'Kepatuhan Menu' },
+          { id: 'cleanliness', label: 'Kebersihan' },
+          { id: 'service', label: 'Layanan Pramusaji' },
+          { id: 'quality', label: 'Kualiti Rasa dan Makanan' },
+          { id: 'quantity', label: 'Kuantiti dan Saiz Makanan' }
+        ];
+
+        let criteriaHtml = dsCriteria.map(c => `
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border: 1px solid #eee; margin-bottom: 15px;">
+            <label style="font-weight: 600; display: block; margin-bottom: 10px;">${c.label}</label>
+            <div style="display: flex; gap: 20px; margin-bottom: 10px;">
+              <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="status_${c.id}" value="Memuaskan" checked onclick="toggleDSReason('${c.id}', 'Memuaskan')"> Memuaskan
+              </label>
+              <label style="font-weight: normal; cursor: pointer; display: flex; align-items: center; gap: 5px;">
+                <input type="radio" name="status_${c.id}" value="Tidak Memuaskan" onclick="toggleDSReason('${c.id}', 'Tidak Memuaskan')"> Tidak Memuaskan
+              </label>
+            </div>
+            <div id="reasonDiv_${c.id}" style="display: none; margin-top: 10px;">
+              <textarea id="reason_${c.id}" placeholder="Sila nyatakan sebab tidak memuaskan..." style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ddd; font-family: inherit; box-sizing: border-box;"></textarea>
+            </div>
+          </div>
+        `).join('');
+
+        var html = `
+          <h3>Borang Semakan Dewan Selera</h3>
+          <p>Sila buat penilaian bagi hidangan dan perkhidmatan dewan selera mengikut waktu makan.</p>
+          <form id="dewanSeleraForm">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+              <div class="form-group">
+                <label>Tarikh Semakan:</label>
+                <input type="date" id="dsDateInput" required>
+              </div>
+              <div class="form-group">
+                <label>Waktu Makan:</label>
+                <select id="dsMealType" required>
+                  <option value="">Pilih Waktu Makan</option>
+                  <option value="Sarapan">Sarapan</option>
+                  <option value="Makan Tengahari">Makan Tengahari</option>
+                  <option value="Minum Petang">Minum Petang</option>
+                  <option value="Makan Malam">Makan Malam</option>
+                  <option value="Supper">Supper</option>
+                </select>
+              </div>
+            </div>
+            
+            <div id="dsCriteriaContainer" style="margin-top: 20px;">
+              ${criteriaHtml}
+            </div>
+
+            <div class="form-group">
+              <label>Ulasan Tambahan (Opsional):</label>
+              <textarea id="dsRemarks" placeholder="Masukkan ulasan jika ada..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; box-sizing: border-box; font-family: inherit;"></textarea>
+            </div>
+
+            <button type="submit" class="submit-btn">Simpan Rekod Dewan Selera</button>
+          </form>
+        `;
+        contentDiv.innerHTML = html;
+
+        window.toggleDSReason = function(id, status) {
+          const div = document.getElementById('reasonDiv_' + id);
+          const area = document.getElementById('reason_' + id);
+          if(status === 'Tidak Memuaskan') {
+            div.style.display = 'block';
+            area.required = true;
+          } else {
+            div.style.display = 'none';
+            area.required = false;
+            area.value = '';
+          }
+        };
+
+        document.getElementById('dewanSeleraForm').addEventListener('submit', function(e) {
+          e.preventDefault();
+          const btn = e.target.querySelector('button[type="submit"]');
+          btn.disabled = true;
+          btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+          let evaluationData = {};
+          dsCriteria.forEach(c => {
+            const status = document.querySelector(`input[name="status_${c.id}"]:checked`).value;
+            evaluationData[c.label] = status + (status === 'Tidak Memuaskan' ? ": " + document.getElementById('reason_' + c.id).value : "");
+          });
+
+          saveRecordToSheets('Dewan Selera', {
+            date: document.getElementById('dsDateInput').value,
+            mealType: document.getElementById('dsMealType').value,
+            ...evaluationData,
+            remarks: document.getElementById('dsRemarks').value
+          }).then(() => {
+            document.getElementById('dewanSeleraForm').reset();
+            dsCriteria.forEach(c => document.getElementById('reasonDiv_' + c.id).style.display = 'none');
+          }).finally(() => {
+            btn.disabled = false;
+            btn.innerHTML = 'Simpan Rekod Dewan Selera';
+          });
+        });
+      } else if (moduleName === 'Laporan') {
+        var html = `
+          <div style="background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="margin-top:0; color: #e31e24;"><i class="fas fa-filter"></i> Tapis Rekod Laporan</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Jenis Laporan:</label>
+                <select id="reportTypeFilter" onchange="toggleReportDateInput()">
+                  <option value="daily">Harian (Senarai Terperinci)</option>
+                  <option value="monthly">Bulanan (Kekerapan)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:0;" id="reportDateContainer">
+                <label>Tarikh:</label>
+                <input type="date" id="statsDateFilter">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Modul:</label>
+                <select id="statsModuleFilter">
+                  <option value="Solat">Kehadiran Solat</option>
+                  <option value="Lewat Keluar">Lewat Keluar</option>
+                  <option value="Dorm">Kebersihan Dorm</option>
+                  <option value="Dewan Selera">Dewan Selera</option>
+                </select>
+              </div>
+              <button onclick="fetchAndDisplayRecords()" class="submit-btn" style="margin-top:0; height: 45px;">Cari Rekod</button>
+            </div>
+          </div>
+
+          <div id="statsResultContainer" style="background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+            <h3 style="margin-top:0; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; color: #333;">
+              <i class="fas fa-list"></i> Senarai Rekod Pelajar
+            </h3>
+            <div style="overflow-x: auto;">
+              <table style="width:100%; border-collapse: collapse; margin-top: 15px;">
+                <thead id="statsTableHeader"></thead>
+                <tbody id="statsTableBody" style="font-size: 0.9rem; color: #444;">
+                  <tr><td colspan="5" style="padding:20px; text-align:center; color:#999;">Sila pilih tarikh dan klik Cari Rekod.</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+        contentDiv.innerHTML = html;
+      } else if (moduleName === 'Jana Laporan') {
+        var html = `
+          <div style="background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="margin-top:0; color: #e31e24;"><i class="fas fa-file-pdf"></i> Panel Jana Laporan PDF</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Tarikh Mula:</label>
+                <input type="date" id="adminStartDate">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Tarikh Akhir:</label>
+                <input type="date" id="adminEndDate">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Modul:</label>
+                <select id="adminModuleFilter">
+                  <option value="Solat">Kehadiran Solat</option>
+                  <option value="Lewat Keluar">Lewat Keluar</option>
+                  <option value="Dorm">Kebersihan Dorm</option>
+                  <option value="Dewan Selera">Dewan Selera</option>
+                </select>
+              </div>
+              <button onclick="fetchAdminRecords()" class="submit-btn" style="margin-top:0; height: 45px;">Paparkan Data</button>
+            </div>
+          </div>
+
+          <div id="adminResultWrapper">
+            <div id="adminPrintArea" style="background: #fff; padding: 40px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display:none;">
+              <!-- Header Rasmi dalam PDF -->
+              <div id="pdfHeader" style="text-align:center; margin-bottom:30px; border-bottom: 3px double #333; padding-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                  <tr>
+                    <td style="text-align: center; vertical-align: middle;">
+                      <img id="pdfLogoMara" src="${logoMaraBase64}" style="max-height: 80px; max-width: 80px; height: auto; width: auto; margin: 0 15px; display: inline-block; vertical-align: middle;">
+                      <img id="pdfLogoMrsm" src="${logoMrsmBase64}" style="max-height: 80px; max-width: 80px; height: auto; width: auto; margin: 0 15px; display: inline-block; vertical-align: middle;">
+                    </td>
+                  </tr>
+                </table>
+                <h2 style="margin:0; color:#e31e24;">MAKTAB RENDAH SAINS MARA SULTAN AZLAN SHAH</h2>
+                <p style="margin:5px 0; font-weight:bold;">LAPORAN SISTEM e-SISKA</p>
+                <p style="margin:0; font-size:0.9rem; color:#666;">Tarikh Cetakan: ${new Date().toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' })}</p>
+              </div>
+              
+              <h3 id="adminReportTitle" style="margin-top:0; color: #333; text-align:center; text-transform: uppercase; line-height: 1.6;"></h3>
+              
+              <div style="overflow-x: auto;">
+                <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                  <thead id="adminTableHeader"></thead>
+                  <tbody id="adminTableBody" style="font-size: 0.9rem;"></tbody>
+                </table>
+              </div>
+
+              <div style="margin-top: 50px; display: flex; justify-content: space-between;">
+                <div style="text-align:center; width: 200px;">
+                  <p>Disediakan oleh:</p><br><br>
+                  <p>_______________________</p>
+                  <p>(Warden Bertugas)</p>
+                </div>
+                <div style="text-align:center; width: 200px;">
+                  <p>Disahkan oleh:</p><br><br>
+                  <p>_______________________</p>
+                  <p>(Pengetua/TP Pembangunan Pelajar)</p>
+                </div>
+              </div>
+            </div>
+            
+            <div style="display:flex; gap:10px;">
+              <button id="pdfBtn" onclick="generatePDF()" class="submit-btn" style="display:none; background: #dc3545; flex:1;">
+                <i class="fas fa-file-pdf"></i> Jana PDF Laporan
+              </button>
+              <button id="resetAdminBtn" onclick="window.loadModule('Jana Laporan')" class="submit-btn" style="display:none; background: #6c757d; flex:1;">
+                <i class="fas fa-sync"></i> Set Semula
+              </button>
+            </div>
+          </div>
+        `;
+        contentDiv.innerHTML = html;
+      } else if (moduleName === 'Statistik') {
+        var html = `
+          <div style="background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px;">
+            <h3 style="margin-top:0; color: #e31e24;"><i class="fas fa-chart-pie"></i> Visualisasi Statistik</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: end;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Pilih Bulan:</label>
+                <input type="month" id="chartsDateFilter">
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label>Modul:</label>
+                <select id="chartsModuleFilter">
+                  <option value="Solat">Kehadiran Solat</option>
+                  <option value="Lewat Keluar">Lewat Keluar</option>
+                  <option value="Dorm">Kebersihan Dorm</option>
+                  <option value="Dewan Selera">Dewan Selera</option>
+                </select>
+              </div>
+              <button onclick="fetchAndDisplayCharts()" class="submit-btn" style="margin-top:0; height: 45px;">Jana Graf</button>
+            </div>
+          </div>
+          <div id="chartsResultContainer" style="background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 400px; position: relative; display: flex; align-items: center; justify-content: center;">
+             <canvas id="myChart"></canvas>
+          </div>
+        `;
+        contentDiv.innerHTML = html;
+      } else {
+        contentDiv.innerHTML = '<h3>Modul ' + moduleName + '</h3><p>Borang dan senarai semak untuk ' + moduleName + ' akan dipaparkan di sini.</p>';
+      }
+    };
+    
+    // Logic: Dynamic Room Numbers
+    window.updateDormRooms = function() {
+      const level = document.getElementById('dormLevelSelect').value;
+      const roomSelect = document.getElementById('dormRoomSelect');
+      if (!roomSelect) return;
+      roomSelect.innerHTML = '<option value="">Pilih Bilik</option>';
+      
+      if (!level) return;
+
+      let prefix = "";
+      if (level === "Bawah") prefix = "00";
+      else if (level === "1") prefix = "10";
+      else if (level === "2") prefix = "20";
+
+      for (let i = 1; i <= 9; i++) {
+        let roomNum = prefix + i;
+        let option = document.createElement('option');
+        option.value = roomNum;
+        option.textContent = roomNum;
+        roomSelect.appendChild(option);
+      }
+    };
+
+    window.calculateDormScore = function() {
+      let total = 0;
+      document.querySelectorAll('.dorm-score').forEach(input => {
+        total += parseInt(input.value) || 0;
+      });
+      const totalEl = document.getElementById('totalDormMarks');
+      const pctEl = document.getElementById('dormPercentage');
+      if (totalEl) totalEl.textContent = total;
+      if (pctEl) {
+        let percentage = (total / 130) * 100;
+        pctEl.textContent = percentage.toFixed(2);
+      }
+    };
+
+    // Fungsi untuk menarik rekod bagi modul Jana Laporan
+    window.fetchAdminRecords = function() {
+      const startDate = document.getElementById('adminStartDate').value;
+      const endDate = document.getElementById('adminEndDate').value;
+      const module = document.getElementById('adminModuleFilter').value;
+      
+      if(!startDate || !endDate) { alert("Sila pilih tarikh mula dan tarikh akhir."); return; }
+
+      const tbody = document.getElementById('adminTableBody');
+      const thead = document.getElementById('adminTableHeader');
+      const printArea = document.getElementById('adminPrintArea');
+      const pdfBtn = document.getElementById('pdfBtn');
+      const resetBtn = document.getElementById('resetAdminBtn');
+
+      tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>';
+      
+      fetch(SCRIPT_URL + "?action=getRecords&startDate=" + startDate + "&endDate=" + endDate + "&type=" + module)
+        .then(res => res.json())
+        .then(records => {
+          tbody.innerHTML = '';
+          
+          const d1 = new Date(startDate).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' });
+          const d2 = new Date(endDate).toLocaleDateString('ms-MY', { day: '2-digit', month: 'long', year: 'numeric' });
+          document.getElementById('adminReportTitle').innerHTML = `LAPORAN ${module.toUpperCase()}<br><span style="font-size:0.9rem; font-weight:normal;">${d1} HINGGA ${d2}</span>`;
+          
+          if(!records || records.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px;">Tiada data dijumpai.</td></tr>';
+            return;
+          }
+
+          // Logik Kekerapan (Solat & Lewat Keluar)
+          if (module === 'Solat' || module === 'Lewat Keluar') {
+            thead.innerHTML = `<tr style="background:#f4f4f4;"><th style="padding:10px;border:1px solid #ddd;">Nama</th><th style="padding:10px;border:1px solid #ddd;">Tingkatan</th><th style="padding:10px;border:1px solid #ddd;">Homeroom</th><th style="padding:10px;border:1px solid #ddd;text-align:center;">Kekerapan</th></tr>`;
+            let summary = {};
+            records.forEach(r => {
+              let key = r.nama + "|" + (r.tingkatan || "-") + "|" + (r.homeroom || "-");
+              summary[key] = (summary[key] || 0) + 1;
+            });
+            Object.keys(summary).sort((a,b) => summary[b] - summary[a]).forEach(key => {
+              let [n, t, h] = key.split("|");
+              tbody.innerHTML += `<tr><td style="padding:10px;border:1px solid #ddd;">${n}</td><td style="padding:10px;border:1px solid #ddd;">${t}</td><td style="padding:10px;border:1px solid #ddd;">${h}</td><td style="padding:10px;border:1px solid #ddd;text-align:center;">${summary[key]}</td></tr>`;
+            });
+          } 
+          // Logik Laporan Dorm
+          else if (module === 'Dorm') {
+            thead.innerHTML = `<tr style="background:#f4f4f4;"><th style="padding:10px;border:1px solid #ddd;">Tarikh</th><th style="padding:10px;border:1px solid #ddd;">Blok</th><th style="padding:10px;border:1px solid #ddd;">Bilik</th><th style="padding:10px;border:1px solid #ddd;">Markah (%)</th></tr>`;
+            records.forEach(r => {
+              let displayPct = '-';
+              if (r.totalMarks) {
+                displayPct = ((Number(r.totalMarks) / 130) * 100).toFixed(2) + '%';
+              } else if (r.percentage) {
+                displayPct = r.percentage;
+              }
+              tbody.innerHTML += `<tr><td style="padding:10px;border:1px solid #ddd;">${r.date ? r.date.split('T')[0] : '-'}</td><td style="padding:10px;border:1px solid #ddd;">${r.block || '-'}</td><td style="padding:10px;border:1px solid #ddd;">${r.room || '-'}</td><td style="padding:10px;border:1px solid #ddd;font-weight:bold;color:#e31e24;">${displayPct}</td></tr>`;
+            });
+          } 
+          // Logik Laporan Dewan Selera
+          else if (module === 'Dewan Selera') {
+            thead.innerHTML = `<tr style="background:#f4f4f4;"><th style="padding:10px;border:1px solid #ddd;">Tarikh</th><th style="padding:10px;border:1px solid #ddd;">Waktu</th><th style="padding:10px;border:1px solid #ddd;">Status Ringkas</th></tr>`;
+            records.forEach(r => {
+              tbody.innerHTML += `<tr><td style="padding:10px;border:1px solid #ddd;">${r.date ? r.date.split('T')[0] : '-'}</td><td style="padding:10px;border:1px solid #ddd;">${r.mealType || '-'}</td><td style="padding:10px;border:1px solid #ddd;font-size:0.8rem;">Kebersihan: ${r['Kebersihan'] || '-'}<br>Rasa: ${r['Kualiti Rasa dan Makanan'] || '-'}</td></tr>`;
+            });
+          } 
+          // Laporan Harian Standard
+          else {
+            thead.innerHTML = `<tr style="background:#f4f4f4;"><th style="padding:10px;border:1px solid #ddd;">Nama</th><th style="padding:10px;border:1px solid #ddd;">Tingkatan</th><th style="padding:10px;border:1px solid #ddd;">Homeroom</th><th style="padding:10px;border:1px solid #ddd;">Pelapor</th></tr>`;
+            records.forEach(r => {
+              tbody.innerHTML += `<tr><td style="padding:10px;border:1px solid #ddd;">${r.nama}</td><td style="padding:10px;border:1px solid #ddd;">${r.tingkatan}</td><td style="padding:10px;border:1px solid #ddd;">${r.homeroom}</td><td style="padding:10px;border:1px solid #ddd;">${r.pelapor}</td></tr>`;
+            });
+          }
+
+          printArea.style.display = 'block';
+          pdfBtn.style.display = 'block';
+          resetBtn.style.display = 'block';
+
+          // Pastikan logo dikemaskini dengan data Base64 terkini sebelum jana PDF
+          if(logoMaraBase64) document.getElementById('pdfLogoMara').src = logoMaraBase64;
+          if(logoMrsmBase64) document.getElementById('pdfLogoMrsm').src = logoMrsmBase64;
+        })
+        .catch(err => {
+          console.error(err);
+          tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:20px; color:red;">Ralat memuatkan data.</td></tr>';
+        });
+    };
+
+    // Fungsi untuk menjana PDF menggunakan html2pdf.js
+    window.generatePDF = function() {
+      // Semak jika library html2pdf wujud
+      if (typeof html2pdf === 'undefined') {
+        alert("Ralat: Library untuk jana PDF tidak dijumpai. Sila pastikan anda mempunyai sambungan internet.");
+        console.error("html2pdf is not defined. Check your internet connection or CDN link.");
+        return;
+      }
+
+      const element = document.getElementById('adminPrintArea');
+      const module = document.getElementById('adminModuleFilter').value;
+      const startDate = document.getElementById('adminStartDate').value;
+      const endDate = document.getElementById('adminEndDate').value;
+      
+      if (!element) return;
+
+      const opt = {
+        margin:       [10, 10, 10, 10],
+        filename:     `Laporan_eSISKA_${module}_${startDate}_${endDate}.pdf`,
+        image:        { type: 'jpeg', quality: 0.98 },
+        html2canvas:  { scale: 2, useCORS: true, allowTaint: false, logging: false },
+        jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait', compress: true }
+      };
+
+      const btn = document.getElementById('pdfBtn');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menjana PDF...';
+
+      html2pdf().set(opt).from(element).save()
+        .then(() => {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        })
+        .catch(err => {
+          console.error("Ralat PDF:", err);
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          alert("Gagal menjana PDF: " + err.message);
+        });
+    };
+
+    // Fungsi untuk tukar input tarikh/bulan di Laporan
+    window.toggleReportDateInput = function() {
+      const type = document.getElementById('reportTypeFilter').value;
+      const container = document.getElementById('reportDateContainer');
+      if (type === 'monthly') {
+        container.innerHTML = '<label>Pilih Bulan:</label><input type="month" id="statsDateFilter">';
+      } else {
+        container.innerHTML = '<label>Tarikh:</label><input type="date" id="statsDateFilter">';
+      }
+    };
+
+    // Fungsi untuk menarik dan memaparkan rekod di Statistik
+    window.fetchAndDisplayRecords = function() {
+      const dateInput = document.getElementById('statsDateFilter');
+      if (!dateInput) return;
+      const date = dateInput.value;
+      const type = document.getElementById('statsModuleFilter').value;
+      const reportType = document.getElementById('reportTypeFilter').value;
+      const tbody = document.getElementById('statsTableBody');
+      const thead = document.getElementById('statsTableHeader');
+      
+      if(!date) { 
+        alert(reportType === 'monthly' ? "Sila pilih bulan." : "Sila pilih tarikh."); 
+        return; 
+      }
+      
+      let colCount = (type === 'Dorm') ? 7 : (type === 'Dewan Selera' ? 4 : 5);
+      if (reportType === 'monthly' && (type === 'Solat' || type === 'Lewat Keluar')) colCount = 4;
+
+      tbody.innerHTML = `<tr><td colspan="${colCount}" style="padding:20px; text-align:center;"><i class="fas fa-spinner fa-spin"></i> Memuatkan data...</td></tr>`;
+      
+      fetch(SCRIPT_URL + "?action=getRecords&date=" + date + "&type=" + type)
+        .then(res => res.json())
+        .then(records => {
+          tbody.innerHTML = '';
+          
+          // Logik Kekerapan Bulanan untuk Solat & Lewat Keluar
+          if (reportType === 'monthly' && (type === 'Solat' || type === 'Lewat Keluar')) {
+            thead.innerHTML = `
+              <tr style="text-align: left; border-bottom: 2px solid #f4f4f4; color: #666; font-size: 0.9rem;">
+                <th style="padding: 10px;">Nama Pelajar</th>
+                <th style="padding: 10px;">Tingkatan</th>
+                <th style="padding: 10px;">Homeroom</th>
+                <th style="padding: 10px; text-align: center;">Kekerapan (Kali)</th>
+              </tr>`;
+            
+            if(!records || records.length === 0) {
+              tbody.innerHTML = `<tr><td colspan="4" style="padding:20px; text-align:center; color:#999;">Tiada rekod dijumpai untuk bulan ini.</td></tr>`;
+              return;
+            }
+
+            let summary = {};
+            records.forEach(r => {
+              let key = r.nama + "|" + (r.tingkatan || "-") + "|" + (r.homeroom || "-");
+              summary[key] = (summary[key] || 0) + 1;
+            });
+
+            // Susun mengikut kekerapan (descending)
+            Object.keys(summary).sort((a, b) => {
+              if (summary[b] !== summary[a]) {
+                return summary[b] - summary[a];
+              }
+              return a.localeCompare(b); // Susun abjad jika kekerapan sama
+            }).forEach(key => {
+              let [nama, tingkatan, homeroom] = key.split("|");
+              tbody.innerHTML += `
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                  <td style="padding: 12px;"><strong>${nama}</strong></td>
+                  <td style="padding: 12px;">${tingkatan}</td>
+                  <td style="padding: 12px;">${homeroom}</td>
+                  <td style="padding: 12px; text-align: center;">
+                    <span style="background:#fff1f1; color:#e31e24; padding:4px 12px; border-radius:12px; font-weight:bold; border:1px solid #ffcccc;">${summary[key]}</span>
+                  </td>
+                </tr>`;
+            });
+            return;
+          }
+
+          // Kemaskini Header Table berdasarkan Modul
+          if (type === 'Dorm') {
+            thead.innerHTML = `
+              <tr style="text-align: left; border-bottom: 2px solid #f4f4f4; color: #666; font-size: 0.9rem;">
+                <th style="padding: 10px;">Tarikh</th>
+                <th style="padding: 10px;">Hari</th>
+                <th style="padding: 10px;">Blok</th>
+                <th style="padding: 10px;">Aras</th>
+                <th style="padding: 10px;">No Bilik</th>
+                <th style="padding: 10px;">Markah (%)</th>
+                <th style="padding: 10px;">Nama Pelapor</th>
+              </tr>`;
+          } else if (type === 'Dewan Selera') {
+            thead.innerHTML = `
+              <tr style="text-align: left; border-bottom: 2px solid #f4f4f4; color: #666; font-size: 0.9rem;">
+                <th style="padding: 10px;">Tarikh</th>
+                <th style="padding: 10px;">Waktu Makan</th>
+                <th style="padding: 10px;">Status Penilaian</th>
+                <th style="padding: 10px;">Pelapor</th>
+              </tr>`;
+          } else {
+            thead.innerHTML = `
+              <tr style="text-align: left; border-bottom: 2px solid #f4f4f4; color: #666; font-size: 0.9rem;">
+                <th style="padding: 10px;">Nama Pelajar</th>
+                <th style="padding: 10px;">Tingkatan</th>
+                <th style="padding: 10px;">Homeroom</th>
+                <th style="padding: 10px;">Pelapor</th>
+                <th style="padding: 10px;">Bukti</th>
+              </tr>`;
+          }
+
+          if(!records || records.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="${colCount}" style="padding:20px; text-align:center; color:#999;">Tiada rekod dijumpai untuk tarikh ini.</td></tr>`;
+            return;
+          }
+          
+          records.forEach(r => {
+            let row = '';
+            if (type === 'Dorm') {
+              // Logik untuk memastikan peratusan dipaparkan dengan betul (dikira semula dari markah/130)
+              let displayPct = '-';
+              if (r.totalMarks !== undefined && r.totalMarks !== null && r.totalMarks !== '') {
+                displayPct = ((Number(r.totalMarks) / 130) * 100).toFixed(2) + '%';
+              } else if (r.percentage || r.peratus) {
+                displayPct = r.percentage || r.peratus;
+                if (typeof displayPct === 'number') displayPct = (displayPct * 100).toFixed(2) + '%';
+              }
+
+              row = `
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                  <td style="padding: 12px;">${r.date ? (typeof r.date === 'string' ? r.date.split('T')[0] : new Date(r.date).toLocaleDateString()) : '-'}</td>
+                  <td style="padding: 12px;">${r.day || r.hari || '-'}</td>
+                  <td style="padding: 12px;">${r.block || '-'}</td>
+                  <td style="padding: 12px;">${r.level || '-'}</td>
+                  <td style="padding: 12px;"><strong>${r.room || '-'}</strong></td>
+                  <td style="padding: 12px;"><span style="color:#e31e24; font-weight:bold;">${displayPct}</span></td>
+                  <td style="padding: 12px;">${r.recordedBy || r.pelapor || r.recordedBy || '-'}</td>
+                </tr>`;
+            } else if (type === 'Dewan Selera') {
+              row = `
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                  <td style="padding: 12px;">${r.date ? (typeof r.date === 'string' ? r.date.split('T')[0] : new Date(r.date).toLocaleDateString()) : '-'}</td>
+                  <td style="padding: 12px;"><strong>${r.mealType || r.waktuMakan || '-'}</strong></td>
+                  <td style="padding: 12px; font-size: 0.85rem;">
+                    <div style="max-height: 150px; overflow-y: auto; line-height: 1.4;">
+                      <small>Sample: ${r['Penyediaan Sample Makanan'] || '-'}</small><br>
+                      <small>Menu: ${r['Kepatuhan Menu'] || '-'}</small><br>
+                      <small>Kebersihan: ${r['Kebersihan'] || '-'}</small><br>
+                      <small>Layanan: ${r['Layanan Pramusaji'] || '-'}</small><br>
+                      <small>Rasa: ${r['Kualiti Rasa dan Makanan'] || '-'}</small><br>
+                      <small>Kuantiti: ${r['Kuantiti dan Saiz Makanan'] || '-'}</small>
+                      ${r.remarks ? `<br><small><strong>Ulasan:</strong> ${r.remarks}</small>` : ''}
+                    </div>
+                  </td>
+                  <td style="padding: 12px;">${r.recordedBy || r.pelapor || '-'}</td>
+                </tr>`;
+            } else {
+              row = `
+                <tr style="border-bottom: 1px solid #f9f9f9;">
+                  <td style="padding: 12px;"><strong>${r.nama}</strong></td>
+                  <td style="padding: 12px;">${r.tingkatan || '-'}</td>
+                  <td style="padding: 12px;">${r.homeroom || '-'}</td>
+                  <td style="padding: 12px;">${r.pelapor || '-'}</td>
+                  <td style="padding: 12px;">
+                    ${r.bukti && r.bukti !== "Tiada Gambar" ? `<a href="${r.bukti}" target="_blank" style="color:#e31e24; text-decoration:none; font-size: 0.8rem; font-weight:bold;"><i class="fas fa-image"></i> Lihat Bukti</a>` : '<span style="color:#ccc;">Tiada Bukti</span>'}
+                  </td>
+                </tr>`;
+            }
+            tbody.innerHTML += row;
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          tbody.innerHTML = `<tr><td colspan="${colCount}" style="padding:20px; text-align:center; color:red;">Gagal memuatkan data. Pastikan Apps Script anda telah dikemaskini dengan action "getRecords".</td></tr>`;
+        });
+    };
+
+    let myChartInstance = null;
+    window.fetchAndDisplayCharts = function() {
+      const date = document.getElementById('chartsDateFilter').value;
+      const type = document.getElementById('chartsModuleFilter').value;
+      const container = document.getElementById('chartsResultContainer');
+      
+      if(!date) { alert("Sila pilih bulan."); return; }
+      
+      container.innerHTML = '<div style="text-align:center;"><i class="fas fa-spinner fa-spin fa-3x"></i><p>Menjana Graf...</p></div>';
+      
+      fetch(SCRIPT_URL + "?action=getRecords&date=" + date + "&type=" + type)
+        .then(res => res.json())
+        .then(records => {
+          if(!records || records.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#999;">Tiada data dijumpai untuk tarikh ini.</p>';
+            return;
+          }
+
+          container.innerHTML = '<canvas id="myChart"></canvas>';
+          const ctx = document.getElementById('myChart').getContext('2d');
+          
+          let labels = [];
+          let dataValues = [];
+          let chartTitle = "";
+          let chartType = 'bar';
+
+          if (type === 'Dorm') {
+            chartTitle = "Purata Markah Kebersihan Dorm (%) mengikut Blok";
+            let blockData = {};
+            records.forEach(r => {
+              let val = r.percentage;
+              // Fix: Jika Sheets simpan 0.823 (decimal), tukar ke 82.3
+              if (typeof val === 'string') val = parseFloat(val.replace('%', ''));
+              else if (typeof val === 'number' && val <= 1) val = val * 100;
+              
+              let blockKey = r.block || "N/A";
+              if (!blockData[blockKey]) blockData[blockKey] = { total: 0, count: 0 };
+              blockData[blockKey].total += (val || 0);
+              blockData[blockKey].count += 1;
+            });
+            labels = Object.keys(blockData).sort();
+            dataValues = labels.map(block => (blockData[block].total / blockData[block].count).toFixed(2));
+            labels = labels.map(l => "Blok " + l);
+          } else if (type === 'Dewan Selera') {
+            chartTitle = "Bilangan 'Memuaskan' mengikut Kriteria";
+            const criteria = ['Penyediaan Sample Makanan', 'Kepatuhan Menu', 'Kebersihan', 'Layanan Pramusaji', 'Kualiti Rasa dan Makanan', 'Kuantiti dan Saiz Makanan'];
+            labels = criteria;
+            dataValues = criteria.map(c => {
+              return records.filter(r => r[c] && r[c].startsWith('Memuaskan')).length;
+            });
+          } else {
+            chartTitle = (type === 'Solat') ? "Statistik Lewat Solat mengikut Tingkatan" : "Bilangan Pelajar mengikut Tingkatan";
+            let counts = {};
+            let total = records.length;
+            records.forEach(r => {
+              let f = r.tingkatan || "N/A";
+              counts[f] = (counts[f] || 0) + 1;
+            });
+            labels = Object.keys(counts).sort();
+            dataValues = labels.map(f => counts[f]);
+            labels = labels.map(f => {
+              let count = counts[f];
+              let pct = ((count / total) * 100).toFixed(1);
+              return `${f} (${count} org - ${pct}%)`;
+            });
+            chartType = 'pie';
+          }
+
+          if(myChartInstance) myChartInstance.destroy();
+          myChartInstance = new Chart(ctx, {
+            type: chartType,
+            data: {
+              labels: labels,
+              datasets: [{
+                label: chartTitle,
+                data: dataValues,
+                backgroundColor: chartType === 'pie' ? 
+                  ['#ff6384', '#36a2eb', '#cc65fe', '#ffce56', '#4bc0c0'] : 
+                  'rgba(227, 30, 36, 0.6)',
+                borderColor: '#e31e24',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: chartType === 'bar' ? {
+                y: { beginAtZero: true, max: type === 'Dorm' ? 100 : undefined }
+              } : {}
+            }
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          container.innerHTML = '<p style="text-align:center; color:red;">Ralat memuatkan data.</p>';
+        });
+    };
+
+    // Fungsi Toggle Sidebar Mobile
+    window.toggleSidebar = function() {
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+      sidebar.classList.toggle('open');
+      overlay.classList.toggle('show');
+    };
+
+    // Papar login bila mula
+    showBox('login');
+  </script>
+</body>
+</html>
